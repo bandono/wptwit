@@ -6,8 +6,8 @@ category=`Twitter`. Initially, writing the plugin was a way to learn
 [OAuth] [1] in practice via `twitteroauth` libraries written by
 [Abraham Williams] [2]:
 
-* `twitteroauth.php` abraham/twitteroauth@76446fa719466c09b20fe021bf9e92f54afc43e1
-* `OAuth.php` abraham/twitteroauth@e161de3b3f8789bc4979fc0a8fed0b6ab49e0b68
+* `twitteroauth.php`: abraham/twitteroauth@76446fa719466c09b20fe021bf9e92f54afc43e1
+* `OAuth.php`: abraham/twitteroauth@e161de3b3f8789bc4979fc0a8fed0b6ab49e0b68
 
 I use it in combination with `iMatt` (bandono/iMatt), a microblogging
 theme serving like Twitter archive except that it push content to the
