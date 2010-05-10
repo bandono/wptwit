@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: WPTwit
-Version: 1.0
+Version: 1.1
 Plugin URI: http://lakm.us/logit/
-Description: Post to Twitter for posts created/updated with category=Twitter inspired by Abraham Twitteroauth.
+Description: Post to Twitter for posts created/updated with category="Twitter" based on Abraham' TwitterOauth. Used also Yourls URL Shortener.
 Author: Arif Kusbandono
 Author URI: http://lakm.us
 
@@ -174,6 +174,53 @@ function wptwit_AddPage() {
 
 add_action('admin_menu', 'wptwit_AddPage');
 
+function yourls_api_call($long_url = '') {
+	// EDIT THIS: your auth parameters
+	$username = '*************';
+	$password = '*************';
+	$format = 'simple';				// output format: 'simple'
+	
+	// EDIT THIS: the URL of the API file
+	$yourls_api_url = 'http://lakm.us/go/yourls-api-custom.php';
+	if ( !empty($long_url) ) {
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $yourls_api_url);
+		curl_setopt($ch, CURLOPT_HEADER, 0);            // No header in the result
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Return, do not echo result
+		curl_setopt($ch, CURLOPT_POST, 1);              // This is a POST request
+		curl_setopt($ch, CURLOPT_POSTFIELDS, array(     // Data to POST
+		'url'      => $long_url,
+		'format'   => $format,
+		'action'   => 'shorturl',
+		'username' => $username,
+		'password' => $password
+		));
+
+		// Fetch and return content
+		$short_url = curl_exec($ch);
+		curl_close($ch);
+	}
+	return $short_url;
+}
+
+function wptwit_url_service_len() {
+	$url_service_len = strlen('{cont} http://lakm.us/123');
+	return $url_service_len;
+}
+
+function wptwit_trim_post($long_post = '', $max_postlen = '') {
+	if ( !empty($long_post) ) {
+		$url_len = wptwit_url_service_len();
+		if( strlen($long_post) > ($max_postlen) ) {
+			$short_post = substr($long_post, 0, (($max_postlen - 1) - $url_len));
+		}
+		else {
+			$short_post = $long_post;
+		}
+	}
+	return $short_post;
+}
+
 function wptwit_init_oauth() {
 	global $twitcallback_url;
 	$options = get_option('wptwit_settings');
@@ -272,8 +319,20 @@ function wptwit_update_status($post_ID) {
 	
 	$my_post = get_post($post_ID);
 	$my_category = get_the_category($post_ID);
+	$my_permalink = get_permalink($post_ID);
 	$status_text = $my_post->post_content;
-	$message = array( 'status' => $status_text);
+	
+	$max_postlen = '140';
+	if ( strlen($status_text) > $max_postlen ) {
+		$status_url = yourls_api_call($my_permalink);
+		$status_text = wptwit_trim_post($status_text, $max_postlen);
+		//$status_text = $status_text ."\t". $status_url;
+		$status_text = $status_text . "\t" . '{cont}'. "\t" . $status_url;
+		$message = array( 'status' => $status_text);
+	}
+	else {
+		$message = array( 'status' => $status_text);
+	}
 	
     $push_Twitter = "false"; //default status of push status to facebook is false
     foreach (get_the_category($post_ID) as $my_category) {
