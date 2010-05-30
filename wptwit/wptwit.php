@@ -1,12 +1,17 @@
 <?php
 /*
 Plugin Name: WPTwit
-Version: 1.1
+Version: 1.3
 Plugin URI: http://lakm.us/logit/
 Description: Post to Twitter for posts created/updated with category="Twitter" based on Abraham' TwitterOauth. Used also Yourls URL Shortener.
 Author: Arif Kusbandono
 Author URI: http://lakm.us
 
+
+1.1	add self hosted yourls.org URL shortener
+1.2	add clickable for twitter user mention & hash-tags
+1.3	modify clickable for twitter hash-tags
+ 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -357,5 +362,14 @@ function wptwit_update_status($post_ID) {
 add_filter('query_vars', 'wptwit_query_vars');	
 add_action('wp', 'wptwit_parse_request');
 add_action('publish_post','wptwit_update_status');
+
+function twitterify($ret) {
+$ret = preg_replace("/@(\w+)/", "<a href=\"http://twitter.com/\\1\" target=\"_blank\">@\\1</a>", $ret);
+$ret = preg_replace("/[^&]#(\w+)/", " <a href=\"http://search.twitter.com/search?q=%23\\1\" target=\"_blank\">#\\1</a>", $ret);
+
+return $ret;
+}
+
+add_filter( 'the_content', 'twitterify' );
 
 ?>
