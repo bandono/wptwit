@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WPTwit
-Version: 1.3
+Version: 1.4
 Plugin URI: http://lakm.us/logit/
 Description: Post to Twitter for posts created/updated with category="Twitter" based on Abraham' TwitterOauth. Used also Yourls URL Shortener.
 Author: Arif Kusbandono
@@ -11,6 +11,7 @@ Author URI: http://lakm.us
 1.1	add self hosted yourls.org URL shortener
 1.2	add clickable for twitter user mention & hash-tags
 1.3	modify clickable for twitter hash-tags
+1.4 add options to disable tweeting i.e. for edit post, title, maintainance, etc.
  
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -65,7 +66,7 @@ function wptwit_options() {
 				$options['oauth_key'] = $_POST['oauth_key'];
 				$options['oauth_secret'] = $_POST['oauth_secret'];
 				update_option('wptwit_settings', $options);
-				$message = '<div class="updated"><p>' . $options['oauth_key'] . 'x' . $options['oauth_secret'] .'<strong>&nbsp; Options saved.</strong></p></div>';	
+				$message = '<div class="updated"><p>' . $options['oauth_key'] . 'x' . $options['oauth_secret'] .' No-tweet status:'. $options['no_twit_push'] .'<strong>&nbsp; Options saved.</strong></p></div>';	
 				
 				echo '<div class="wrap">';
 				echo '<h2>WPTwit Options</h2>';
@@ -81,7 +82,7 @@ function wptwit_options() {
 				echo '<input type="text" name="oauth_secret" value="' . $options['oauth_secret'] . '" />';
 				echo '</td></tr>' . "\n";
 				echo '</table>' . "\n";
-				echo '<h3>Alloow This Apps!</h3>' . "\n";
+				echo '<h3>Allow This Apps!</h3>' . "\n";
 				echo 'Sign in to Twitter and allow this application and then go back to this setting' . "\n";
 				echo 'and fill in the required access token once you have allowed' . "\n";
 				echo 'and saved options again' . "\n";
@@ -95,6 +96,12 @@ function wptwit_options() {
 				echo '<input type="text" name="access_token_secret" value="' . $options['access_token_secret'] . '" />';
 				echo '</td></tr>' . "\n";
 				echo '</table>' . "\n";
+				echo '<h3>Maintenance/No Post Mode</h3>' . "\n";
+				echo '<table class="form-table">' . "\n";
+				echo '<tr><th scope="row">Put in no post mode?</th><td>' . "\n";				
+				echo '<input type="checkbox" name="no_twit_push" value="yes" />';
+				echo '</td></tr>' . "\n";
+				echo '</table>' . "\n";				
 				echo '<p class="submit"><input class="button-primary" type="submit" method="post" value="Update Options"></p>';
 				echo '</form>';
 
@@ -106,8 +113,9 @@ function wptwit_options() {
 				$options['oauth_secret'] = $_POST['oauth_secret'];
 				$options['access_token'] = $_POST['access_token'];
 				$options['access_token_secret'] = $_POST['access_token_secret'];
+				$options['no_twit_push'] = $_POST['no_twit_push'];				
 				update_option('wptwit_settings', $options);
-				$message = '<div class="updated"><p>' . $options['access_ktoken'] .'<strong>&nbsp; Options saved.</strong></p></div>';
+				$message = '<div class="updated"><p>' . $options['access_ktoken'] .' No-tweet status:'. $options['no_twit_push'] .'<strong>&nbsp; Options saved.</strong></p></div>';
 				
 				echo '<div class="wrap">';
 				echo '<h2>WPTwit Options</h2>';
@@ -123,7 +131,7 @@ function wptwit_options() {
 				echo '<input type="text" name="oauth_secret" value="' . $options['oauth_secret'] . '" />';
 				echo '</td></tr>' . "\n";
 				echo '</table>' . "\n";
-				echo '<h3>Alloow This Apps!</h3>' . "\n";
+				echo '<h3>Allow This Apps!</h3>' . "\n";
 				echo 'Sign in to Twitter and allow this application and then go back to this setting' . "\n";
 				echo 'and fill in the required access token once you have allowed' . "\n";
 				echo 'and saved options again' . "\n";
@@ -137,6 +145,12 @@ function wptwit_options() {
 				echo '<input type="text" name="access_token_secret" value="' . $options['access_token_secret'] . '" />';
 				echo '</td></tr>' . "\n";
 				echo '</table>' . "\n";
+				echo '<h3>Maintenance/No Post Mode</h3>' . "\n";
+				echo '<table class="form-table">' . "\n";
+				echo '<tr><th scope="row">Put in no post mode?</th><td>' . "\n";				
+				echo '<input type="checkbox" name="no_twit_push" value="yes" />';
+				echo '</td></tr>' . "\n";
+				echo '</table>' . "\n";					
 				echo '<p class="submit"><input class="button-primary" type="submit" method="post" value="Update Options"></p>';
 				echo '</form>';
 
@@ -321,6 +335,7 @@ function wptwit_update_status($post_ID) {
 	$secret = $options['oauth_secret'];
 	$token = $options['access_token'];
 	$token_secret = $options['access_token_secret'];
+	$no_twit_push=$options['no_twit_push'];
 	
 	$my_post = get_post($post_ID);
 	$my_category = get_the_category($post_ID);
@@ -339,10 +354,17 @@ function wptwit_update_status($post_ID) {
 		$message = array( 'status' => $status_text);
 	}
 	
-    $push_Twitter = "false"; //default status of push status to facebook is false
-    foreach (get_the_category($post_ID) as $my_category) {
-		if ($my_category->cat_name == "Twitter") {
-				$push_Twitter = "true";
+    $push_Twitter = "false"; //default status of push status to Twitter is false
+	//if no tweet push option is checked, this will also prevent tweet
+	if ( $no_twit_push == 'yes' ) {
+		$push_Twitter = "false";
+	}
+	else
+	{
+		foreach (get_the_category($post_ID) as $my_category) {
+			if ($my_category->cat_name == "Twitter") {
+					$push_Twitter = "true";
+			}
 		}
 	}
 	
