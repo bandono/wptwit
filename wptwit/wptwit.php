@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: WPTwit
-Version: 1.5
+Version: 1.5.1
 Plugin URI: http://lakm.us/logit/
 Description: Post to Twitter for posts created/updated with category="Twitter" based on Abraham' TwitterOauth. Used also Yourls URL Shortener.
 Author: Arif Kusbandono
@@ -13,6 +13,7 @@ Author URI: http://lakm.us
 1.3	modify clickable for twitter hash-tags
 1.4 add options to disable tweeting i.e. for edit post, title, maintainance, etc.
 1.5 add pic.lakm.us URL shortener
+1.5.1 pic.lakm.us URL shortener modified to have the http:// prefix replaced during push to Twitter
  
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -220,6 +221,8 @@ function yourls_api_call($long_url = '') {
 		$short_url = curl_exec($ch);
 		curl_close($ch);
 	}
+	// remove "http://" prefix from URL
+	$short_url = preg_replace('/http:\/\/*/', '', $short_url);
 	return $short_url;
 }
 
@@ -370,12 +373,32 @@ function wptwit_update_status($post_ID) {
 	$my_post = get_post($post_ID);
 	$my_category = get_the_category($post_ID);
 	$my_permalink = get_permalink($post_ID);
+	$my_post_status = get_post_status($post_ID);
 	$my_image = get_post_meta($post_ID, 'image', true);
 	$status_text = $my_post->post_content;
 	
 	$max_postlen = '140';
 	$max_with_image_postlen = '117';
-	if (isset($my_image))
+	
+    $push_Twitter = "false"; //default status of push status to Twitter is false
+	//if no tweet push option is checked, this will also prevent tweet
+	if ( $no_twit_push == 'yes' ) {
+		$push_Twitter = "false";
+	}
+	else
+	{
+		foreach (get_the_category($post_ID) as $my_category) {
+			if ($my_category->cat_name == "Twitter") {
+					$push_Twitter = "true";
+			}
+		}
+	}
+	
+	if ( $my_post_status == 'private' ) {
+		$push_Twitter = "false";
+	}
+		
+	if ( !empty($my_image) && $push_Twitter = "true" )
 	{
 		$status_url = pics_api_call($my_permalink);
 		if ( strlen($status_text) > $max_with_image_postlen ) {
@@ -399,20 +422,7 @@ function wptwit_update_status($post_ID) {
 			$message = array( 'status' => $status_text);
 		}
 	}	
-    $push_Twitter = "false"; //default status of push status to Twitter is false
-	//if no tweet push option is checked, this will also prevent tweet
-	if ( $no_twit_push == 'yes' ) {
-		$push_Twitter = "false";
-	}
-	else
-	{
-		foreach (get_the_category($post_ID) as $my_category) {
-			if ($my_category->cat_name == "Twitter") {
-					$push_Twitter = "true";
-			}
-		}
-	}
-	
+
 	if(!class_exists('TwitterOAuth')) {
 		include_once(WP_PLUGIN_DIR.'/wptwit/twitteroauth/twitteroauth.php');
 	}
