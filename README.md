@@ -4,10 +4,11 @@ wptwit
 WordPress plugin that will push to Twitter posts created or updated with
 category name Twitter. Initially, writing the plugin was a way to learn
 [OAuth] [1] in practice via *twitteroauth* libraries written by
-[Abraham Williams] [2]
+[Abraham Williams] [2] and has been updated to use Twitter API v1.1
+since API v1.0 retired June 2013
 
-* twitteroauth.php: abraham@76446fa719466c09b20fe021bf9e92f54afc43e1
-* OAuth.php: abraham@e161de3b3f8789bc4979fc0a8fed0b6ab49e0b68
+* twitteroauth.php (API v1.1): abraham@7d212801ca9049d8e492b2c33e287cc9b4f713b4
+* OAuth.php: abraham@7c47dd7c041c105fa59d7b4d8682b768aa98cd2d
 
 I use it in combination with *iMatt* [bandono/iMatt] [3], a microblogging
 theme serving like Twitter archive except that it push content to the
